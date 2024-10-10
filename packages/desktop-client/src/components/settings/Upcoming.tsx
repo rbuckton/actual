@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
+import React, { type CSSProperties, useState } from 'react';
 import { Trans } from 'react-i18next';
 import { useLocation } from 'react-router-dom';
-
-import { Column } from 'glamor/jsxstyle';
 
 import { type SyncedPrefs } from 'loot-core/types/prefs';
 
 import { useSyncedPref } from '../../hooks/useSyncedPref';
-import { type CSSProperties, theme } from '../../style';
+import { theme } from '../../style';
 import { Button } from '../common/Button2';
 import { Select } from '../common/Select';
 import { Text } from '../common/Text';
@@ -43,15 +41,16 @@ export function UpcomingLengthSettings() {
   return expanded ? (
     <Setting
       primaryAction={
-        <View style={{ flexDirection: 'row', gap: '1em' }}>
-          <Column title="Upcoming Length">
-            <Select
-              options={options.map(x => [x.value || '7', x.label])}
-              value={upcomingLength}
-              onChange={newValue => setUpcomingLength(newValue)}
-              style={selectButtonStyle}
-            />
-          </Column>
+        <View
+          title="Upcoming Length"
+          style={{ flexDirection: 'row', gap: '1em' }}
+        >
+          <Select
+            options={options.map(x => [x.value || '7', x.label])}
+            value={upcomingLength}
+            onChange={newValue => setUpcomingLength(newValue)}
+            style={selectButtonStyle}
+          />
         </View>
       }
     >
