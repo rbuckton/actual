@@ -1,15 +1,17 @@
 import React, {
-  type InputHTMLAttributes,
   type KeyboardEvent,
-  type Ref,
+  type ComponentPropsWithRef,
+  forwardRef,
+  useEffect,
   useRef,
+  useMemo,
 } from 'react';
+import { Input as ReactAriaInput } from 'react-aria-components';
 
 import { css } from 'glamor';
 
 import { useMergedRefs } from '../../hooks/useMergedRefs';
-import { useProperFocus } from '../../hooks/useProperFocus';
-import { type CSSProperties, styles, theme } from '../../style';
+import { styles, theme } from '../../style';
 
 export const defaultInputStyle = {
   outline: 0,
@@ -21,86 +23,104 @@ export const defaultInputStyle = {
   border: '1px solid ' + theme.formInputBorder,
 };
 
-type InputProps = InputHTMLAttributes<HTMLInputElement> & {
-  style?: CSSProperties;
-  inputRef?: Ref<HTMLInputElement>;
+type InputProps = ComponentPropsWithRef<typeof ReactAriaInput> & {
+  autoSelect?: boolean;
   onEnter?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onEscape?: (event: KeyboardEvent<HTMLInputElement>) => void;
   onChangeValue?: (newValue: string) => void;
   onUpdate?: (newValue: string) => void;
-  focused?: boolean;
 };
 
-export function Input({
-  style,
-  inputRef,
-  onEnter,
-  onEscape,
-  onChangeValue,
-  onUpdate,
-  focused,
-  className,
-  ...nativeProps
-}: InputProps) {
-  const ref = useRef<HTMLInputElement>(null);
-  useProperFocus(ref, focused);
+export const Input = forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      autoSelect,
+      className = '',
+      onEnter,
+      onEscape,
+      onChangeValue,
+      onUpdate,
+      ...props
+    },
+    ref,
+  ) => {
+    const inputRef = useRef<HTMLInputElement>(null);
+    const mergedRef = useMergedRefs<HTMLInputElement>(inputRef, ref);
 
-  const mergedRef = useMergedRefs<HTMLInputElement>(ref, inputRef);
+    useEffect(() => {
+      if (autoSelect) {
+        inputRef.current?.select();
+      }
+    }, [autoSelect]);
 
-  return (
-    <input
-      ref={mergedRef}
-      className={`${css(
-        defaultInputStyle,
-        {
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          flexShrink: 0,
-          ':focus': {
-            border: '1px solid ' + theme.formInputBorderSelected,
-            boxShadow: '0 1px 1px ' + theme.formInputShadowSelected,
-          },
-          '::placeholder': { color: theme.formInputTextPlaceholder },
-        },
-        styles.smallText,
-        style,
-      )} ${className}`}
-      {...nativeProps}
-      onKeyDown={e => {
-        nativeProps.onKeyDown?.(e);
+    const defaultButtonClassName: string = useMemo(
+      () =>
+        String(
+          css(
+            defaultInputStyle,
+            {
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              flexShrink: 0,
+              '&[data-focused]': {
+                border: '1px solid ' + theme.formInputBorderSelected,
+                boxShadow: '0 1px 1px ' + theme.formInputShadowSelected,
+              },
+              '&::placeholder': { color: theme.formInputTextPlaceholder },
+            },
+            styles.smallText,
+          ),
+        ),
+      [],
+    );
 
-        if (e.key === 'Enter' && onEnter) {
-          onEnter(e);
+    return (
+      <ReactAriaInput
+        ref={mergedRef}
+        {...props}
+        className={
+          typeof className === 'function'
+            ? renderProps =>
+                `${defaultButtonClassName} ${className(renderProps) || ''}`
+            : `${defaultButtonClassName} ${className || ''}`
         }
+        onKeyDown={e => {
+          props.onKeyDown?.(e);
 
-        if (e.key === 'Escape' && onEscape) {
-          onEscape(e);
-        }
-      }}
-      onBlur={e => {
-        onUpdate?.(e.target.value);
-        nativeProps.onBlur?.(e);
-      }}
-      onChange={e => {
-        onChangeValue?.(e.target.value);
-        nativeProps.onChange?.(e);
-      }}
-    />
-  );
-}
+          if (e.key === 'Enter' && onEnter) {
+            onEnter(e);
+          }
+
+          if (e.key === 'Escape' && onEscape) {
+            onEscape(e);
+          }
+        }}
+        onBlur={e => {
+          onUpdate?.(e.target.value);
+          props.onBlur?.(e);
+        }}
+        onChange={e => {
+          onChangeValue?.(e.target.value);
+          props.onChange?.(e);
+        }}
+      />
+    );
+  },
+);
+
+Input.displayName = 'Input';
 
 export function BigInput(props: InputProps) {
   return (
     <Input
       {...props}
-      style={{
+      className={`${css({
         padding: 10,
         fontSize: 15,
         border: 'none',
         ...styles.shadow,
-        ':focus': { border: 'none', ...styles.shadow },
-        ...props.style,
-      }}
+        '&[data-focused]': { border: 'none', ...styles.shadow },
+      })} ${props.className}`}
     />
   );
 }
