@@ -4,7 +4,7 @@ import { css } from 'glamor';
 
 import { type CSSProperties, theme } from '../../style';
 
-import { Input, defaultInputStyle } from './Input';
+import { Input } from './Input';
 import { View } from './View';
 
 type InputWithContentProps = ComponentPropsWithRef<typeof Input> & {
@@ -23,7 +23,12 @@ export const InputWithContent = forwardRef<
     return (
       <View
         style={{
-          ...defaultInputStyle,
+          outline: 0,
+          backgroundColor: theme.tableBackground,
+          color: theme.formInputText,
+          margin: 0,
+          borderRadius: 4,
+          border: '1px solid ' + theme.formInputBorder,
           padding: 0,
           flexDirection: 'row',
           alignItems: 'center',
